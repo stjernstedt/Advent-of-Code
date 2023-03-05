@@ -15,8 +15,7 @@ const bagRules = [];
 let nodes = [];
 let hasShinyGold = [];
 const regex = /(\w+ \w+) bags? contain (.+)./;
-const regex2 = /(\w+ \w+) bags*/g;
-const regex3 = /(\d+) (\w+ \w+) bags*/g;
+const regex2 = /(\d+) (\w+ \w+) bags*/g;
 let match;
 for (line of lines) {
 	if (!line.trim().length) {
@@ -33,7 +32,7 @@ for (line of lines) {
 }
 
 function containsShinyGold(bagNode) {
-	while (matches = regex3.exec(bagRules[bagNode.type])) {
+	while (matches = regex2.exec(bagRules[bagNode.type])) {
 		if (matches[2] != 'no other') {
 			nodes.push(new Node(bagNode, matches[1], matches[2]));
 			if (matches[2] == 'shiny gold') {
@@ -55,7 +54,54 @@ function markAllParents(bagNode) {
 	}
 }
 
-totalBags = 0;
 
+class Node2 {
+	constructor(amount, type, parent) {
+		this.children = [];
+		this.amount = amount;
+		this.type = type;
+		this.parent = parent;
+		this.trail = [];
+	}
+}
+
+totalBags = 0;
+let startNode = new Node2(1, 'shiny gold');
+
+function populateTree(bagNode) {
+	while (matches = regex2.exec(bagRules[bagNode.type])) {
+		if (matches[2] != 'no other') {
+			let child = new Node2(matches[1], matches[2], bagNode);
+			child.trail.push(bagNode.amount);
+			bagNode.children.push(child);
+		}
+	}
+	if (bagNode.type != 'no other') {
+		for (child of bagNode.children) {
+			populateTree(child);
+		}
+	}
+}
+
+function sumNodes(bagNode) {
+	if (bagNode.children.length > 0) {
+		for (child of bagNode.children) {
+			let fact = 0;
+			for (let i = child.trail.length - 1; i <= 0; i--) {
+				fact += child.trail[i] * child.amount;
+			}
+			totalBags += fact;
+			sumNodes(child);
+		}
+	}
+}
+
+function test(bagNode) {
+	// walk through parents
+}
+
+// populateTree(startNode);
+// sumNodes(startNode);
+// console.log(totalBags);
 
 // console.log(hasShinyGold.length);
